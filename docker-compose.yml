@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-init:/docker-entrypoint-initdb.d
+      - mongo-data:/data/db
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/gateway
+    depends_on:
+      - mongo
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: auth
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/auth
+    depends_on:
+      - mongo
+
+  event:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: event
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/event
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
